@@ -1,12 +1,13 @@
+@Library("Shared") _
 pipeline{
     agent any
        
     stages {
         stage("Code"){
             steps{
-                echo "This is cloning the code"
-                git url: "https://github.com/Jaimin1010/django-notes-app.git", branch: "main"
-                echo "code cloning successful"
+                script {
+                clone("https://github.com/Jaimin1010/django-notes-app.git", "main")
+            }
             }
         }
         stage('Debug') {
@@ -18,25 +19,14 @@ pipeline{
 }
         stage("Build"){
             steps{
-                echo "This is building the code"
-                bat "docker build -t notes-app:latest ."
+               docker_build("notes-app","latest","jaimin090")
             }
         }
         stage("Push to DockerHub"){
             steps{
-                echo "This is pushing the image to Docker Hub"
-              withCredentials([usernamePassword(
-    credentialsId: 'dockerHubCred',
-    usernameVariable: 'dockerHubUser',
-    passwordVariable: 'dockerHubPass'
-)]) {
-
-    bat '''
-    docker login -u %dockerHubUser% -p %dockerHubPass%
-    docker tag notes-app:latest %dockerHubUser%/notes-app:latest
-    docker push %dockerHubUser%/notes-app:latest
-    '''
-}
+                script{
+                    docker_push("notes-app","latest","jaimin090")
+                }
           }
         }
                 stage('Deploy') {
